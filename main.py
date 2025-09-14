@@ -181,9 +181,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.mergeon1.addItem(col_letter)
         # 新增：更新文件2合并列选择
 
-        # if self.mm.file1.selectedColumns:
-        #     self.mm.file1.setMergeon(self.mm.file1.selectedColumns[0] + 1)
-        #     self.mergeon1.setCurrentIndex(0)
+        if self.mm.file1.selectedColumns:
+            self.mm.file1.setMergeon(self.mm.file1.selectedColumns[0] + 1)
+            self.mergeon1.setCurrentIndex(0)
 
     def updateMergeColumns2(self):
         """更新文件2的合并列选择"""
@@ -195,9 +195,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             col_letter = f"列{col_index+1}"
             self.mergeon2.addItem(col_letter)
 
-        # if self.mm.file2.selectedColumns:
-        #     self.mm.file2.setMergeon(self.mm.file2.selectedColumns[0] + 1)
-        #     self.mergeon2.setCurrentIndex(0)
+        if self.mm.file2.selectedColumns:
+            self.mm.file2.setMergeon(self.mm.file2.selectedColumns[0] + 1)
+            self.mergeon2.setCurrentIndex(0)
 
     # def col11changed(self, r):
     #     self.mm.file1.setStartCol(r)
