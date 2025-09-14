@@ -150,6 +150,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             item.setData(Qt.UserRole, col_info['index'])
             self.columnList1.addItem(item)
         # 新增：更新文件2列选择列表
+        for i in range(self.columnList1.count()):
+            self.columnList1.item(i).setSelected(True)
 
     def updateColumnList2(self):
         """更新文件2的列选择列表"""
@@ -162,6 +164,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             item = QtWidgets.QListWidgetItem(f"{col_info['letter']}: {col_info['header']}")
             item.setData(Qt.UserRole, col_info['index'])
             self.columnList2.addItem(item)
+
+        for i in range(self.columnList2.count()):
+            self.columnList2.item(i).setSelected(True)
 
     def updateMergeColumns1(self):
         """更新文件1的合并列选择"""

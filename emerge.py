@@ -230,7 +230,7 @@ class MergeManager():
         # if not (j1 >= 0 and j2 >= 0 and j1 < m1 and j2 < m2):
         #     return
 
-        if not (self.file1.mergeon >= 0 and self.file2.mergeon >= 0 and j1 < m1 and j2 < m2):
+        if not (self.file1.mergeon > 0 and self.file2.mergeon > 0 and j1 >= 0 and j2 >= 0 and j1 < m1 and j2 < m2):
             return
 
         data1 = [self.file1.tableData[i1][j1] for i1 in range(n1)]
