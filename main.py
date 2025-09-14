@@ -174,6 +174,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.mergeon1.addItem(col_letter)
         # 新增：更新文件2合并列选择
 
+        # if self.mm.file1.selectedColumns:
+        #     self.mm.file1.setMergeon(self.mm.file1.selectedColumns[0]+1)
+        #     self.mergeon1.setCurrentIndex(0)
+
     def updateMergeColumns2(self):
         """更新文件2的合并列选择"""
         self.mergeon2.clear()
@@ -183,6 +187,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for col_index in self.mm.file2.selectedColumns:
             col_letter = openpyxl.utils.get_column_letter(col_index + 1)
             self.mergeon2.addItem(col_letter)
+
+        # if self.mm.file2.selectedColumns:
+        #     self.mm.file2.setMergeon(self.mm.file2.selectedColumns[0]+1)
+        #     self.mergeon2.setCurrentIndex(0)
 
     # def col11changed(self, r):
     #     self.mm.file1.setStartCol(r)
@@ -282,11 +290,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 设置列标题
         if file.startRow and file.endRow:
             headers = [str(x) for x in range(file.startRow, file.endRow + 1)]
+        else:
+            headers = [str(x) for x in range(1,n+1)] if n>0 else []
         table.setVerticalHeaderLabels(headers)
 
         # 设置水平列标题
         if hasattr(file, 'getColumnHeaders'):
             headers = file.getColumnHeaders()
+        else:
+            headers = [f"列{i+1}" for i in range(m)] if m>0 else []
         table.setHorizontalHeaderLabels(headers)
 
         for i in range(n):
