@@ -22,7 +22,7 @@ class ExcelFile():
         # self.startCol = 0
         # self.endCol = 0
         self.selectedColumns = []  # 新增：存储选中的列索引列表
-        self.mergeon = 0
+        self.mergeon = -1
 
         self.loadFile()
 
@@ -164,7 +164,7 @@ class ExcelFile():
             all_columns.append({
                 'index': col_index,
                 'header': header,
-                'letter': openpyxl.utils.get_column_letter(col_index + 1)
+                'letter': f"列{col_index + 1}"
             })
         wb.close()
         return all_columns
@@ -223,21 +223,14 @@ class MergeManager():
         m2 = len(self.file2.tableData[0]) if n2 else 0
 
         # 修改：直接使用 mergeon 作为列索引，不再减去 startCol
-        j1 = self.file1.mergeon - 1  # 转换为0-based索引
-        j2 = self.file2.mergeon - 1  # 转换为0-based索引
+        j1 = self.file1.mergeon  # 转换为0-based索引
+        j2 = self.file2.mergeon  # 转换为0-based索引
 
         # 检查列索引是否有效
         # if not (j1 >= 0 and j2 >= 0 and j1 < m1 and j2 < m2):
         #     return
 
-        if not (self.file1.mergeon > 0 and self.file2.mergeon > 0 and j1 >= 0 and j2 >= 0 and j1 < m1 and j2 < m2):
-            return
-
-        if not (self.file1.mergeon <= 0 or self.file2.mergeon <= 0):
-            self.tableData = []
-            return
-
-        if j1 < 0 or j2 < 0 or j1 >= m1 or j2 >= m2:
+        if not (self.file1.mergeon >= 0 and self.file2.mergeon >= 0 and j1 < m1 and j2 < m2):
             return
 
         data1 = [self.file1.tableData[i1][j1] for i1 in range(n1)]

@@ -36,8 +36,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.col12.textChanged.connect(self.col12changed)
         # self.col21.textChanged.connect(self.col21changed)
         # self.col22.textChanged.connect(self.col22changed)
-        self.columnList1.itemSelectionChanged.connect(self.column1SelectionChanged)
-        self.columnList2.itemSelectionChanged.connect(self.column2SelectionChanged)
+        self.columnList1.itemClicked.connect(self.column1SelectionChanged)
+        self.columnList2.itemClicked.connect(self.column2SelectionChanged)
         
         self.table1.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -94,9 +94,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mm.setFile1(f1)
         self.updateColumnList1()  # 更新列选择列表
         self.updateTable1()
+        self.updateMergeColumns1()
+        # self.mergeon1.setCurrentIndex(-1)
         self.row11.setText(str(self.mm.file1.startRow))
         self.row12.setText(str(self.mm.file1.endRow))
-        self.mergeon1.setCurrentIndex(-1)
 
     def setFile2(self):
         f2 = self.getFile()
@@ -104,6 +105,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mm.setFile2(f2)
         self.updateColumnList2()  # 更新列选择列表
         self.updateTable2()
+        self.updateMergeColumns2()
         self.row21.setText(str(self.mm.file2.startRow))
         self.row22.setText(str(self.mm.file2.endRow))
         self.mergeon2.setCurrentIndex(-1)
@@ -148,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         all_columns = self.mm.file1.getAllColumns()
         for col_info in all_columns:
-            item = QtWidgets.QListWidgetItem(f"{col_info['letter']}: {col_info['header']}")
+            item = QtWidgets.QListWidgetItem(f"{col_info['letter']}:{col_info['header']}")
             item.setData(Qt.UserRole, col_info['index'])
             self.columnList1.addItem(item)
         # 新增：更新文件2列选择列表
@@ -163,7 +165,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         all_columns = self.mm.file2.getAllColumns()
         for col_info in all_columns:
-            item = QtWidgets.QListWidgetItem(f"{col_info['letter']}: {col_info['header']}")
+            item = QtWidgets.QListWidgetItem(f"{col_info['letter']}:{col_info['header']}")
             item.setData(Qt.UserRole, col_info['index'])
             self.columnList2.addItem(item)
 
@@ -172,101 +174,77 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def updateMergeColumns1(self):
         """更新文件1的合并列选择"""
+        currentIndex = self.mergeon1.currentIndex()
         self.mergeon1.clear()
         if not self.mm.file1.selectedColumns:
             return
 
+        index = 0
         for col_index in self.mm.file1.selectedColumns:
-            col_letter = f"列{col_index+1}"
+            col_letter = f"列{col_index+1}:{self.mm.file1.tableData[0][index]}"
             self.mergeon1.addItem(col_letter)
-        # 新增：更新文件2合并列选择
+            index+=1
 
-        if self.mm.file1.selectedColumns:
-            self.mm.file1.setMergeon(self.mm.file1.selectedColumns[0] + 1)
-            self.mergeon1.setCurrentIndex(0)
+        if currentIndex == -1 :
+            self.mm.file1.mergeon = -1
+            self.mergeon1.setCurrentIndex(-1)
 
     def updateMergeColumns2(self):
         """更新文件2的合并列选择"""
+        currentIndex = self.mergeon2.currentIndex()
         self.mergeon2.clear()
         if not self.mm.file2.selectedColumns:
             return
 
+        index = 0
         for col_index in self.mm.file2.selectedColumns:
-            col_letter = f"列{col_index+1}"
+            col_letter = f"列{col_index + 1}:{self.mm.file2.tableData[0][index]}"
             self.mergeon2.addItem(col_letter)
+            index += 1
 
-        if self.mm.file2.selectedColumns:
-            self.mm.file2.setMergeon(self.mm.file2.selectedColumns[0] + 1)
-            self.mergeon2.setCurrentIndex(0)
-
-    # def col11changed(self, r):
-    #     self.mm.file1.setStartCol(r)
-    #     self.updateTable1()
-    #     if self.mm.file1.startCol and self.mm.file1.endCol:
-    #         colrange = range(self.mm.file1.startCol, self.mm.file1.endCol + 1)
-    #         headers = [get_column_letter(x) for x in colrange]
-    #         self.mergeon1.clear()
-    #         for col in headers:
-    #             self.mergeon1.addItem(col)
-    #
-    # def col12changed(self, r):
-    #     self.mm.file1.setEndCol(r)
-    #     self.updateTable1()
-    #     if self.mm.file1.startCol and self.mm.file1.endCol:
-    #         colrange = range(self.mm.file1.startCol, self.mm.file1.endCol + 1)
-    #         headers = [get_column_letter(x) for x in colrange]
-    #         self.mergeon1.clear()
-    #         for col in headers:
-    #             self.mergeon1.addItem(col)
-    #
-    # def col21changed(self, r):
-    #     self.mm.file2.setStartCol(r)
-    #     self.updateTable2()
-    #     if self.mm.file2.startCol and self.mm.file2.endCol:
-    #         colrange = range(self.mm.file2.startCol, self.mm.file2.endCol + 1)
-    #         headers = [get_column_letter(x) for x in colrange]
-    #         self.mergeon2.clear()
-    #         for col in headers:
-    #             self.mergeon2.addItem(col)
-    #
-    # def col22changed(self, r):
-    #     self.mm.file2.setEndCol(r)
-    #     self.updateTable2()
-    #     if self.mm.file2.startCol and self.mm.file2.endCol:
-    #         colrange = range(self.mm.file2.startCol, self.mm.file2.endCol + 1)
-    #         headers = [get_column_letter(x) for x in colrange]
-    #         self.mergeon2.clear()
-    #         for col in headers:
-    #             self.mergeon2.addItem(col)
+        if currentIndex == -1:
+            self.mm.file2.mergeon = -1
+            self.mergeon2.setCurrentIndex(-1)
 
     # 新增：文件1列选择改变
-    def column1SelectionChanged(self):
+    def column1SelectionChanged(self, item):
         """文件1列选择改变"""
+        columnText = item.text()
+        mergeText = self.mergeon1.itemText(self.mm.file1.mergeon)
         selected_items = self.columnList1.selectedItems()
         selected_indices = [item.data(Qt.UserRole) for item in selected_items]
         self.mm.file1.setSelectedColumns(selected_indices)
         self.updateTable1()
         self.updateMergeColumns1()
+
+        if columnText == mergeText:
+            self.mm.file1.mergeon = -1
+            self.mergeon1.setCurrentIndex(-1)
         # 新增：文件2列选择改变
 
-    def column2SelectionChanged(self):
+    def column2SelectionChanged(self, item):
         """文件2列选择改变"""
+        columnText = item.text()
+        mergeText = self.mergeon2.itemText(self.mm.file2.mergeon)
         selected_items = self.columnList2.selectedItems()
         selected_indices = [item.data(Qt.UserRole) for item in selected_items]
         self.mm.file2.setSelectedColumns(selected_indices)
         self.updateTable2()
         self.updateMergeColumns2()
+        if columnText == mergeText:
+            self.mm.file2.mergeon = -1
+            self.mergeon2.setCurrentIndex(-1)
 
     def mergon1changed(self, mergeon):
         if mergeon >= 0 and mergeon < len(self.mm.file1.selectedColumns):
             selected_col_index = self.mm.file1.selectedColumns[mergeon]
-            self.mm.file1.setMergeon(selected_col_index+1)  # 转换为1-based索引
+            self.mm.file1.setMergeon(selected_col_index)  # 转换为1-based索引
         self.updateTable1()
 
     def mergon2changed(self, mergeon):
         if mergeon >= 0 and mergeon < len(self.mm.file2.selectedColumns):
             selected_col_index = self.mm.file2.selectedColumns[mergeon]
-            self.mm.file2.setMergeon(selected_col_index+1)  # 转换为1-based索引
+            self.mm.file2.setMergeon(selected_col_index)  # 转换为1-based索引
         self.updateTable2()
 
     def mergeAndSave(self):
@@ -294,7 +272,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         table.setRowCount(n)
         table.setColumnCount(m)
 
-        # 设置列标题
+        # 设置行标题
         if file.startRow and file.endRow:
             headers = [str(x) for x in range(file.startRow, file.endRow + 1)]
         else:
