@@ -55,6 +55,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.merge.clicked.connect(self.mergeAndSave)
 
+        self.useMergeResult.clicked.connect(self.useMergeResultAsMain)
+
         self.showMaximized()
         self.statusBar()
         self.setStatusTip("Ready.")
@@ -123,6 +125,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mm.setFile2("")
         self.row21.clear()
         self.row22.clear()
+        self.mergeon2.clear()
         self.columnList2.clear()
         self.updateTable2()
 
@@ -175,6 +178,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def updateMergeColumns1(self):
         """更新文件1的合并列选择"""
         currentIndex = self.mergeon1.currentIndex()
+        mergeText = self.mergeon1.itemText(self.mm.file1.mergeon)
         self.mergeon1.clear()
         if not self.mm.file1.selectedColumns:
             return
@@ -183,15 +187,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for col_index in self.mm.file1.selectedColumns:
             col_letter = f"列{col_index+1}:{self.mm.file1.tableData[0][index]}"
             self.mergeon1.addItem(col_letter)
+            if mergeText == col_letter:
+                currentIndex = index
             index+=1
 
-        if currentIndex == -1 :
-            self.mm.file1.mergeon = -1
-            self.mergeon1.setCurrentIndex(-1)
+        self.mm.file1.mergeon = currentIndex
+        self.mergeon1.setCurrentIndex(currentIndex)
+
 
     def updateMergeColumns2(self):
         """更新文件2的合并列选择"""
         currentIndex = self.mergeon2.currentIndex()
+        mergeText = self.mergeon2.itemText(self.mm.file2.mergeon)
         self.mergeon2.clear()
         if not self.mm.file2.selectedColumns:
             return
@@ -200,11 +207,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for col_index in self.mm.file2.selectedColumns:
             col_letter = f"列{col_index + 1}:{self.mm.file2.tableData[0][index]}"
             self.mergeon2.addItem(col_letter)
+            if mergeText == col_letter:
+                currentIndex = index
             index += 1
 
-        if currentIndex == -1:
-            self.mm.file2.mergeon = -1
-            self.mergeon2.setCurrentIndex(-1)
+        self.mm.file2.mergeon = currentIndex
+        self.mergeon2.setCurrentIndex(currentIndex)
 
     # 新增：文件1列选择改变
     def column1SelectionChanged(self, item):
@@ -213,6 +221,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         mergeText = self.mergeon1.itemText(self.mm.file1.mergeon)
         selected_items = self.columnList1.selectedItems()
         selected_indices = [item.data(Qt.UserRole) for item in selected_items]
+        selected_indices.sort()
         self.mm.file1.setSelectedColumns(selected_indices)
         self.updateTable1()
         self.updateMergeColumns1()
@@ -228,6 +237,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         mergeText = self.mergeon2.itemText(self.mm.file2.mergeon)
         selected_items = self.columnList2.selectedItems()
         selected_indices = [item.data(Qt.UserRole) for item in selected_items]
+        selected_indices.sort()
         self.mm.file2.setSelectedColumns(selected_indices)
         self.updateTable2()
         self.updateMergeColumns2()
@@ -237,14 +247,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def mergon1changed(self, mergeon):
         if mergeon >= 0 and mergeon < len(self.mm.file1.selectedColumns):
-            selected_col_index = self.mm.file1.selectedColumns[mergeon]
-            self.mm.file1.setMergeon(selected_col_index)  # 转换为1-based索引
+            # selected_col_index = self.mm.file1.selectedColumns[mergeon]
+            self.mm.file1.setMergeon(mergeon)  # 转换为1-based索引
         self.updateTable1()
 
     def mergon2changed(self, mergeon):
         if mergeon >= 0 and mergeon < len(self.mm.file2.selectedColumns):
-            selected_col_index = self.mm.file2.selectedColumns[mergeon]
-            self.mm.file2.setMergeon(selected_col_index)  # 转换为1-based索引
+            # selected_col_index = self.mm.file2.selectedColumns[mergeon]
+            self.mm.file2.setMergeon(mergeon)  # 转换为1-based索引
         self.updateTable2()
 
     def mergeAndSave(self):
@@ -305,6 +315,56 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def updateMerge(self):
         self.mm.updateData()
         self.updateTable(self.table3, self.mm, 3)
+
+    def useMergeResultAsMain(self):
+        if not self.mm.tableData:
+            QtWidgets.QMessageBox.warning(self, "警告", "没有合并结果可以使用")
+            return
+
+        reply = QtWidgets.QMessageBox.question(self, "确认操作",
+                                               "确定要将合并结果作为新主表吗？\n这将清除当前的主表和次表数据。",
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
+
+        if reply == QtWidgets.QMessageBox.Yes:
+            self.mm.file1.tableData = self.mm.tableData.copy()
+            self.mm.file1.cacheData = self.mm.tableData.copy()
+            self.mm.file1.selectedColumns = []
+            for i in range(len(self.mm.file1.tableData[0])):
+                self.mm.file1.selectedColumns.append(i)
+            self.mm.tableData = []
+            self.clearFile2()
+            self.updateMergedFile1ColumnList()
+            self.updateMergeColumns1()
+            self.updateTable1()
+            self.updateTable2()
+            self.updateMerge()
+            self.mm.file1.mergeon = -1
+            self.mm.file2.mergeon = -1
+            self.mergeon1.setCurrentIndex(-1)
+
+
+    def updateMergedFile1ColumnList(self):
+        self.columnList1.clear()
+        if not self.mm.file1.fname:
+            return
+
+        all_columns = []
+        for col_index in range(len(self.mm.file1.tableData[0])):
+            # 获取列标题（第一行）
+            header = str(self.mm.file1.tableData[0][col_index])
+            all_columns.append({
+                'index': col_index,
+                'header': header,
+                'letter': f"列{col_index + 1}"
+            })
+        for col_info in all_columns:
+            item = QtWidgets.QListWidgetItem(f"{col_info['letter']}:{col_info['header']}")
+            item.setData(Qt.UserRole, col_info['index'])
+            self.columnList1.addItem(item)
+        # 新增：更新文件2列选择列表
+        for i in range(self.columnList1.count()):
+            self.columnList1.item(i).setSelected(True)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

@@ -23,6 +23,7 @@ class ExcelFile():
         # self.endCol = 0
         self.selectedColumns = []  # 新增：存储选中的列索引列表
         self.mergeon = -1
+        self.cacheData = []
 
         self.loadFile()
 
@@ -104,7 +105,7 @@ class ExcelFile():
             # 自动选择所有列
             self.selectedColumns = list(range(len(self.tableData[0])))
         self.removeEmptyRowsCols()
-        self.updateData()
+        self.firstUpdate()
         wb.close()
 
     def removeEmptyRowsCols(self):
@@ -125,7 +126,7 @@ class ExcelFile():
         if firstNonEmptyCol > 0:
             self.selectedColumns = [col for col in self.selectedColumns if col >= firstNonEmptyCol - 1]
 
-    def updateData(self):
+    def firstUpdate(self):
         self.tableData = []
         if not self.selectedColumns:
             return
@@ -141,7 +142,24 @@ class ExcelFile():
                 else:
                     selected_row.append("")
             self.tableData.append(selected_row)
+            self.cacheData.append(selected_row)
         wb.close()
+
+    def updateData(self):
+        self.tableData = []
+        if not self.selectedColumns:
+            return
+        for row in range(len(self.cacheData)):
+            if row+1 >= self.startRow and row+1 <= self.endRow:
+                # 只选择指定的列
+                selected_row = []
+                for col_index in self.selectedColumns:
+                    if col_index < len(self.cacheData[row]):
+                        selected_row.append(str(self.cacheData[row][col_index]) if self.cacheData[row][col_index] is not None else "")
+                    else:
+                        selected_row.append("")
+                self.tableData.append(selected_row)
+
 
     def getColumnHeaders(self):
         """获取列标题"""
