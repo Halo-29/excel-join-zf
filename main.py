@@ -66,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     #################################################################
 
     def getFile(self):
-        return QtWidgets.QFileDialog.getOpenFileName(self, "Choose Excel File", "", "Excel File (*.xlsx)")[0]
+        return QtWidgets.QFileDialog.getOpenFileName(self, "选择Excel表", "", "Excel表 (*.xlsx)")[0]
 
     def setFuzzy(self, fuzzy):
         self.mm.setFuzzy(fuzzy)
@@ -92,28 +92,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def setFile1(self):
         f1 = self.getFile()
-        self.load1.setText(f1)
-        self.mm.setFile1(f1)
-        self.updateColumnList1()  # 更新列选择列表
-        self.updateTable1()
-        self.updateMergeColumns1()
-        # self.mergeon1.setCurrentIndex(-1)
-        self.row11.setText(str(self.mm.file1.startRow))
-        self.row12.setText(str(self.mm.file1.endRow))
+        if f1 != '':
+            self.load1.setText(f1)
+            self.mm.setFile1(f1)
+            self.updateColumnList1()  # 更新列选择列表
+            self.updateTable1()
+            self.updateMergeColumns1()
+            # self.mergeon1.setCurrentIndex(-1)
+            self.row11.setText(str(self.mm.file1.startRow))
+            self.row12.setText(str(self.mm.file1.endRow))
 
     def setFile2(self):
         f2 = self.getFile()
-        self.load2.setText(f2)
-        self.mm.setFile2(f2)
-        self.updateColumnList2()  # 更新列选择列表
-        self.updateTable2()
-        self.updateMergeColumns2()
-        self.row21.setText(str(self.mm.file2.startRow))
-        self.row22.setText(str(self.mm.file2.endRow))
-        self.mergeon2.setCurrentIndex(-1)
+        if f2 != '':
+            self.load2.setText(f2)
+            self.mm.setFile2(f2)
+            self.updateColumnList2()  # 更新列选择列表
+            self.updateTable2()
+            self.updateMergeColumns2()
+            self.row21.setText(str(self.mm.file2.startRow))
+            self.row22.setText(str(self.mm.file2.endRow))
+            self.mergeon2.setCurrentIndex(-1)
 
     def clearFile1(self):
-        self.load1.setText("Load Main File")
+        self.load1.setText("导入主表")
         self.mm.setFile1("")
         self.row11.clear()
         self.row12.clear()
@@ -121,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.updateTable1()
 
     def clearFile2(self):
-        self.load2.setText("Load Secondary File")
+        self.load2.setText("导入副表")
         self.mm.setFile2("")
         self.row21.clear()
         self.row22.clear()
@@ -301,10 +303,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 data = file.tableData[i][j]
                 item = QtWidgets.QTableWidgetItem(data)
                 item.setFlags(Qt.ItemIsEnabled)
-                if data == NULL_STR:
-                    item.setForeground(QtGui.QBrush(QtGui.QColor('red')))
-                if data.startswith(WARN_STR):
-                    item.setForeground(QtGui.QBrush(QtGui.QColor('blue')))
+                # if data == NULL_STR:
+                #     item.setForeground(QtGui.QBrush(QtGui.QColor('red')))
+                # if data.startswith(WARN_STR):
+                #     item.setForeground(QtGui.QBrush(QtGui.QColor('blue')))
                 table.setItem(i, j, item)
 
         if num != 3:
@@ -322,7 +324,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
 
         reply = QtWidgets.QMessageBox.question(self, "确认操作",
-                                               "确定要将合并结果作为新主表吗？\n这将清除当前的主表和次表数据。",
+                                               "确定要将合并结果作为新主表吗？\n这将清除当前的主表和副表数据。",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                QtWidgets.QMessageBox.No)
 
@@ -330,6 +332,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.mm.file1.tableData = self.mm.tableData.copy()
             self.mm.file1.cacheData = self.mm.tableData.copy()
             self.mm.file1.selectedColumns = []
+            self.load1.setText('合并表')
             for i in range(len(self.mm.file1.tableData[0])):
                 self.mm.file1.selectedColumns.append(i)
             self.mm.tableData = []

@@ -6,7 +6,6 @@ WARN_STR = "⚠ "
 
 ALGOS = [fuzz.ratio,
          fuzz.WRatio,
-         fuzz.partial_token_set_ratio,
          fuzz.token_set_ratio,
          fuzz.token_sort_ratio,
          fuzz.partial_ratio,
@@ -191,10 +190,10 @@ class MergeManager():
     def __init__(self):
         self.file1 = ExcelFile("")
         self.file2 = ExcelFile("")
-        self.fuzzy = True
-        self.algo = 2
+        self.fuzzy = False
+        self.algo = 5
         self.thresh = 70
-        self.outputType = "outerjoin"
+        self.outputType = "innerjoin"
         self.updateData()
 
     def setFile1(self, file1):
