@@ -8,7 +8,7 @@ from gui import Ui_MainWindow
 
 from openpyxl.utils import get_column_letter
 
-from emerge import MergeManager, NULL_STR, WARN_STR
+from emerge import MergeManager, NULL_STR, WARN_STR, toVal
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.updateMergeColumns1()
             # self.mergeon1.setCurrentIndex(-1)
             self.row11.setText(str(self.mm.file1.startRow))
-            self.row12.setText(str(self.mm.file1.endRow))
+            self.row12.setText(str(self.mm.file1.endRow-1))
 
     def setFile2(self):
         f2 = self.getFile()
@@ -111,7 +111,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.updateTable2()
             self.updateMergeColumns2()
             self.row21.setText(str(self.mm.file2.startRow))
-            self.row22.setText(str(self.mm.file2.endRow))
+            self.row22.setText(str(self.mm.file2.endRow-1))
+            self.mm.file2.setMergeon(-1)
             self.mergeon2.setCurrentIndex(-1)
 
     def clearFile1(self):
@@ -119,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mm.setFile1("")
         self.row11.clear()
         self.row12.clear()
+        self.mergeon1.clear()
         self.columnList1.clear()
         self.updateTable1()
 
@@ -260,10 +262,43 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.updateTable2()
 
     def mergeAndSave(self):
-        fname = QtWidgets.QFileDialog.getSaveFileName(self, "Choose Excel File", "", "Excel File (*.xlsx)")[0]
-        self.updateMerge()
-        self.mm.save(fname)
-        self.setStatusTip("Saved output!")
+        if not self.mm.tableData and self.mm.file1.tableData:
+            reply = QtWidgets.QMessageBox.question(self, "确认操作",
+                                               "没有合并结果\n是否想保存主表?",
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                fname = QtWidgets.QFileDialog.getSaveFileName(self, "Choose Excel File", "", "Excel File (*.xlsx)")[0]
+                self.saveFile1(fname)
+                self.setStatusTip("Saved output!")
+        elif self.mm.tableData:
+            fname = QtWidgets.QFileDialog.getSaveFileName(self, "Choose Excel File", "", "Excel File (*.xlsx)")[0]
+            self.updateMerge()
+            self.mm.save(fname)
+            self.setStatusTip("Saved output!")
+        else:
+            QtWidgets.QMessageBox.warning(self, "警告", "没有结果可以使用")
+            return
+
+    def saveFile1(self, fname):
+        if not fname.endswith(".xlsx"):
+            fname += ".xlsx"
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Merge Data"
+        for row in self.mm.file1.tableData:
+            for i in range(len(row)):
+                row[i] = toVal(row[i])
+            ws.append(row)
+        for row in ws:
+            for cell in row:
+                if cell.value == NULL_STR:
+                    cell.font = openpyxl.styles.Font(name='Calibri',color="FF0000")
+                if str(cell.value).startswith(WARN_STR):
+                    cell.font = openpyxl.styles.Font(name='Calibri',color="0000FF")
+                    cell.value = str(cell.value)[2:]
+        wb.save(fname)
 
     #################################################################
     ##  PRIVATE
@@ -286,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # 设置行标题
         if file.startRow and file.endRow:
-            headers = [str(x) for x in range(file.startRow, file.endRow + 1)]
+            headers = ["列名"] + [str(x) for x in range(file.startRow, file.endRow + 1)]
         else:
             headers = [str(x) for x in range(1,n+1)] if n>0 else []
         table.setVerticalHeaderLabels(headers)

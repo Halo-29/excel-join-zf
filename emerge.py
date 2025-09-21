@@ -148,8 +148,17 @@ class ExcelFile():
         self.tableData = []
         if not self.selectedColumns:
             return
+        selected_row = []
+        for col_index in self.selectedColumns:
+            if col_index < len(self.cacheData[0]):
+                selected_row.append(
+                    str(self.cacheData[0][col_index]) if self.cacheData[0][col_index] is not None else "")
+            else:
+                selected_row.append("")
+        self.tableData.append(selected_row)
         for row in range(len(self.cacheData)):
-            if row+1 >= self.startRow and row+1 <= self.endRow:
+            # if row+1 >= self.startRow and row+1 <= self.endRow:
+            if row >= self.startRow and row <= self.endRow:
                 # 只选择指定的列
                 selected_row = []
                 for col_index in self.selectedColumns:
@@ -250,29 +259,40 @@ class MergeManager():
         if not (self.file1.mergeon >= 0 and self.file2.mergeon >= 0 and j1 < m1 and j2 < m2):
             return
 
-        data1 = [self.file1.tableData[i1][j1] for i1 in range(n1)]
-        data2 = [self.file2.tableData[i2][j2] for i2 in range(n2)]
+        data1 = [self.file1.tableData[i1][j1] for i1 in range(1, n1)]
+        data2 = [self.file2.tableData[i2][j2] for i2 in range(1, n2)]
 
-        rowsNonMatchedRight = set(range(n2))
-        for l in range(n1):
+        title = False
+
+        rowsNonMatchedRight = set(range(1, n2))
+        for l in range(n1-1):
             matches = 0
             rows = []
-            for r in range(n2):
+            for r in range(n2-1):
                 if data1[l].strip() == "" or data2[r].strip() == "":
                     continue
                 if matchFxn(data1[l], data2[r]):
                     matches += 1
-                    row = self.file1.tableData[l] + self.file2.tableData[r]
+                    row = self.file1.tableData[l + 1] + self.file2.tableData[r + 1]
                     rows.append(row)
-                    if r in rowsNonMatchedRight:
-                        rowsNonMatchedRight.remove(r)
+                    if r + 1 in rowsNonMatchedRight:
+                        rowsNonMatchedRight.remove(r + 1)
             if matches == 0:
-                row = self.file1.tableData[l] + [NULL_STR] * m2
+                row = self.file1.tableData[l + 1] + [NULL_STR] * m2
                 if self.outputType == "leftjoin" or self.outputType == "outerjoin":
+                    if not title:
+                        self.tableData.append(self.file1.tableData[0] + self.file2.tableData[0])
+                        title = True
                     self.tableData.append(row)
             if matches == 1:
+                if not title:
+                    self.tableData.append(self.file1.tableData[0] + self.file2.tableData[0])
+                    title = True
                 self.tableData.append(rows[0])
             if matches > 1:
+                if not title:
+                    self.tableData.append(self.file1.tableData[0] + self.file2.tableData[0])
+                    title = True
                 for r in rows:
                     r[0] = WARN_STR + r[0]
                     self.tableData.append(r)
